@@ -3,13 +3,13 @@
   "version": "1.0.0",
   "description": "\"# -Realtime-Chat-App-with-React-Node.js-Socket.io\"",
   "main": "index.js",
-  "engines":{
-    "node":">=20.0.0"
+  "engines": {
+    "node": ">=20.0.0"
   },
   "scripts": {
-	"build":"npm install --prefix backend && npm install --prefix fontend && npm run build --prefix frontend",
+    "build": "npm install --prefix backend && npm install --prefix fontend && npm run build --prefix frontend",
     "start": "npm run start --prefix backend"
-	},
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/VRMX2/-Realtime-Chat-App-with-React-Node.js-Socket.io.git"
@@ -20,5 +20,8 @@
   "bugs": {
     "url": "https://github.com/VRMX2/-Realtime-Chat-App-with-React-Node.js-Socket.io/issues"
   },
-  "homepage": "https://github.com/VRMX2/-Realtime-Chat-App-with-React-Node.js-Socket.io#readme"
+  "homepage": "https://github.com/VRMX2/-Realtime-Chat-App-with-React-Node.js-Socket.io#readme",
+  "dependencies": {
+    "cloudinary": "^2.7.0"
+  }
 }
