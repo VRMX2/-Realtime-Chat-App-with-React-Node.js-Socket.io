@@ -1,3 +1,4 @@
+<img width="1280" height="720" alt="screenshot-for-readme" src="https://github.com/user-attachments/assets/a129a710-c243-4375-b108-50407b9b34dc" />
 
 💬 Realtime Chat App
 
