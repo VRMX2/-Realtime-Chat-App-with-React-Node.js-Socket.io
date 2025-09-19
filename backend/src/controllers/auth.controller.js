@@ -4,6 +4,7 @@ import User from "../models/User.js";
 import bcrypt from "bcryptjs";
 import { ENV } from "../lib/env.js";
 import cloudinary from "../lib/cloudinary.js";
+import mongoose from "mongoose";
 
 export const signup = async (req, res) => {
   const { fullName, email, password } = req.body;
@@ -17,7 +18,7 @@ export const signup = async (req, res) => {
       return res.status(400).json({ message: "Password must be at least 6 characters" });
     }
 
-    // check if emailis valid: regex
+    // check if email is valid: regex
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       return res.status(400).json({ message: "Invalid email format" });
@@ -37,26 +38,61 @@ export const signup = async (req, res) => {
     });
 
     if (newUser) {
-      // before CR:
-      // generateToken(newUser._id, res);
-      // await newUser.save();
-
-      // after CR:
-      // Persist user first, then issue auth cookie
-      const savedUser = await newUser.save();
-      generateToken(savedUser._id, res);
-
-      res.status(201).json({
-        _id: newUser._id,
-        fullName: newUser.fullName,
-        email: newUser.email,
-        profilePic: newUser.profilePic,
-      });
-
       try {
-        await sendWelcomeEmail(savedUser.email, savedUser.fullName, ENV.CLIENT_URL);
-      } catch (error) {
-        console.error("Failed to send welcome email:", error);
+        // Persist user first, then issue auth cookie
+        const savedUser = await newUser.save();
+        generateToken(savedUser._id, res);
+
+        res.status(201).json({
+          _id: newUser._id,
+          fullName: newUser.fullName,
+          email: newUser.email,
+          profilePic: newUser.profilePic,
+        });
+
+        try {
+          await sendWelcomeEmail(savedUser.email, savedUser.fullName, ENV.CLIENT_URL);
+        } catch (error) {
+          console.error("Failed to send welcome email:", error);
+        }
+      } catch (saveError) {
+        // Handle the specific username index error
+        if (saveError.code === 11000 && saveError.message.includes('username_1')) {
+          console.log("🔧 Detected username index issue. Attempting to fix...");
+          
+          try {
+            // Try to remove the problematic index
+            const db = mongoose.connection.db;
+            const usersCollection = db.collection('users');
+            await usersCollection.dropIndex("username_1");
+            console.log("✅ Removed problematic username index");
+            
+            // Try saving the user again
+            const savedUser = await newUser.save();
+            generateToken(savedUser._id, res);
+
+            res.status(201).json({
+              _id: newUser._id,
+              fullName: newUser.fullName,
+              email: newUser.email,
+              profilePic: newUser.profilePic,
+            });
+
+            try {
+              await sendWelcomeEmail(savedUser.email, savedUser.fullName, ENV.CLIENT_URL);
+            } catch (error) {
+              console.error("Failed to send welcome email:", error);
+            }
+            
+          } catch (fixError) {
+            console.log("❌ Could not fix username index automatically:", fixError.message);
+            return res.status(500).json({ 
+              message: "Database configuration issue. Please contact support." 
+            });
+          }
+        } else {
+          throw saveError; // Re-throw if it's a different error
+        }
       }
     } else {
       res.status(400).json({ message: "Invalid user data" });
@@ -85,7 +121,7 @@ export const login = async (req, res) => {
     generateToken(user._id, res);
 
     res.status(200).json({
-      _id: user._id,
+		_id: user._id,
       fullName: user.fullName,
       email: user.email,
       profilePic: user.profilePic,
