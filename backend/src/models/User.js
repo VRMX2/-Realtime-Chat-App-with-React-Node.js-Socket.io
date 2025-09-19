@@ -1,67 +1,29 @@
-import mongoose from 'mongoose';
-import bcrypt from 'bcryptjs';
+import mongoose from "mongoose";
 
-const userSchema = new mongoose.Schema({
-    username: {
-        type: String,
-        required: [true, 'Username is required'],
-        unique: true,
-        trim: true,
-        minlength: [3, 'Username must be at least 3 characters long'],
-        maxlength: [20, 'Username cannot exceed 20 characters']
-    },
+const userSchema = new mongoose.Schema(
+  {
     email: {
-        type: String,
-        required: [true, 'Email is required'],
-        unique: true,
-        lowercase: true,
-        trim: true,
-        match: [/^\S+@\S+\.\S+$/, 'Please provide a valid email']
+      type: String,
+      required: true,
+      unique: true,
+    },
+    fullName: {
+      type: String,
+      required: true,
     },
     password: {
-        type: String,
-        required: [true, 'Password is required'],
-        minlength: [6, 'Password must be at least 6 characters long']
+      type: String,
+      required: true,
+      minlength: 6,
     },
-    avatar: {
-        type: String,
-        default: ''
+    profilePic: {
+      type: String,
+      default: "",
     },
-    isOnline: {
-        type: Boolean,
-        default: false
-    },
-    lastSeen: {
-        type: Date,
-        default: Date.now
-    }
-}, {
-    timestamps: true
-});
+  },
+  { timestamps: true } // createdAt & updatedAt
+);
 
-// Hash password before saving
-userSchema.pre('save', async function(next) {
-    if (!this.isModified('password')) return next();
-    
-    try {
-        const salt = await bcrypt.genSalt(12);
-        this.password = await bcrypt.hash(this.password, salt);
-        next();
-    } catch (error) {
-        next(error);
-    }
-});
+const User = mongoose.model("User", userSchema);
 
-// Compare password method
-userSchema.methods.comparePassword = async function(candidatePassword) {
-    return await bcrypt.compare(candidatePassword, this.password);
-};
-
-// Remove password from JSON output
-userSchema.methods.toJSON = function() {
-    const userObject = this.toObject();
-    delete userObject.password;
-    return userObject;
-};
-
-export default mongoose.model('User', userSchema);
+export default User;

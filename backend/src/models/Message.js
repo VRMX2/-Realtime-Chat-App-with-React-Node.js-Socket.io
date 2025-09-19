@@ -1,46 +1,29 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
-const messageSchema = new mongoose.Schema({
-    sender: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        required: true
+const messageSchema = new mongoose.Schema(
+  {
+    senderId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
     },
-    receiver: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        required: true
+    receiverId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
     },
-    content: {
-        type: String,
-        required: [true, 'Message content is required'],
-        trim: true,
-        maxlength: [1000, 'Message cannot exceed 1000 characters']
+    text: {
+      type: String,
+      trim: true,
+      maxlength: 2000,
     },
-    messageType: {
-        type: String,
-        enum: ['text', 'image', 'file'],
-        default: 'text'
+    image: {
+      type: String,
     },
-    isRead: {
-        type: Boolean,
-        default: false
-    },
-    readAt: {
-        type: Date
-    },
-    edited: {
-        type: Boolean,
-        default: false
-    },
-    editedAt: {
-        type: Date
-    }
-}, {
-    timestamps: true
-});
+  },
+  { timestamps: true }
+);
 
-// Index for efficient queries
-messageSchema.index({ sender: 1, receiver: 1, createdAt: -1 });
+const Message = mongoose.model("Message", messageSchema);
 
-export default mongoose.model('Message', messageSchema);
+export default Message;
